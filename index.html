@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gympl Simulátor: Čím budeš po střední?</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+    <!-- Header -->
+    <header class="w-full py-6 px-4 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-2xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🎓</span>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Gympl Simulátor</h1>
+            </div>
+            <div id="step-counter" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                Otázka 1 / 10
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-2xl mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="space-y-6 text-center">
+            <div class="inline-flex p-4 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-4xl mb-2 shadow-inner">
+                ✨
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Kdo z tebe bude po gymplu?</h2>
+            <p class="text-slate-400 max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
+                Odpověz na 10 zapeklitých otázek ze školních lavic, chodeb i kantýny a zjisti, jaký obor a budoucí role ti přesně padnou na míru!
+            </p>
+            <div class="pt-4">
+                <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 font-bold text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                    Spustit simulátor 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden space-y-6">
+            <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full w-[10%] transition-all duration-300"></div>
+            </div>
+            
+            <div class="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-sm space-y-6">
+                <h3 id="question-text" class="text-xl sm:text-2xl font-bold text-white leading-snug"></h3>
+                <div id="options-container" class="space-y-3">
+                    <!-- Options injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden space-y-8 py-4">
+            <div class="text-center space-y-3">
+                <div class="inline-flex p-4 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-pink-500/20 border border-indigo-500/30 text-4xl shadow-lg" id="result-emoji">
+                    🏆
+                </div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-indigo-400">Tvůj výsledný profil</h3>
+                <h2 id="result-title" class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight"></h2>
+                <p id="result-desc" class="text-slate-300 max-w-lg mx-auto text-sm sm:text-base leading-relaxed bg-slate-900/60 p-4 rounded-2xl border border-slate-800"></p>
+            </div>
+
+            <!-- Detailed breakdown -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4">
+                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Porovnání oborů</h4>
+                <div id="stats-container" class="space-y-3">
+                    <!-- Stats bars injected via JS -->
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button onclick="restartQuiz()" class="flex-1 py-4 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold text-white transition-all duration-200 cursor-pointer text-center">
+                    Zkusit znovu 🔄
+                </button>
+                <button onclick="copyResult()" class="flex-1 py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all duration-200 cursor-pointer text-center">
+                    Sdílet výsledek 📋
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-6 text-center text-xs text-slate-500 border-t border-slate-900">
+        Gympl Simulátor • Vytvořeno pro studenty &copy; 2026
+    </footer>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-medium border border-slate-700 shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        Výsledek zkopírován do schránky!
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Začíná hodina matematiky a píše se nečekaná písemka. Co uděláš?",
+                options: [
+                    { text: "Vytáhnu vlastní programovatelnou kalkulačku a spočítám to s přehledem.", cat: "technicky" },
+                    { text: "Do zadání namaluju originální komiks a doufám v uměleckou úlevu.", cat: "umelecky" },
+                    { text: "Naladím se na filozofickou vlnu a sepíšu esej o smyslu derivací.", cat: "humanitni" },
+                    { text: "Nenápadně v lavici protahuju prsty a přemýšlím, kdy už bude tělocvik.", cat: "sportovni" },
+                    { text: "Natočím potají stories pro Instagram s popiskem 'RIP matematika'.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Jak trávíš o hlavní přestávce?",
+                options: [
+                    { text: "V kabinetu informatiky diskutuji s učitelem o novém hardwaru.", cat: "technicky" },
+                    { text: "Sedím v koutě s náčrtníkem a skicuji portrét spolužáka.", cat: "umelecky" },
+                    { text: "Debatuji s učitelem dějepisu o politické situaci ve 14. století.", cat: "humanitni" },
+                    { text: "Dávám si rychlý sprint po chodbě nebo shazuji míčem koš v tělocvičně.", cat: "sportovni" },
+                    { text: "Obíhám lidi s telefonem a točím anketu na TikTok.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Blíží se školní akademie. Jakou roli si vezmeš na starosti?",
+                options: [
+                    { text: "Zprovozním ozvučení, světla a kompletní síť pro promítání.", cat: "technicky" },
+                    { text: "Navrhnu celou scénografii, plakáty a výzdobu sálu.", cat: "umelecky" },
+                    { text: "Napíšu scénář a moderuji celý program s dokonalou výslovností.", cat: "humanitni" },
+                    { text: "Budu hlavní hvězdou sportovního vystoupení nebo gymnastické show.", cat: "sportovni" },
+                    { text: "Budu natáčet celý event živě na sociální sítě.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Učitel tě vyvolá k tabuli na neoblíbený předmět. Jak zareaguješ?",
+                options: [
+                    { text: "Odvodím to logicky pomocí fyzikálních konstant a algoritmů.", cat: "technicky" },
+                    { text: "Okouzlím třídu kreativní metaforou, která sice nedává smysl, ale zní skvěle.", cat: "umelecky" },
+                    { text: "Vytáhnu z rukávu pět citátů a fundovaný historický kontext.", cat: "humanitni" },
+                    { text: "Skočím k tabuli s takovou energií, až se zatřese podlaha.", cat: "sportovni" },
+                    { text: "Zkusím udělat vtipný obličej na kameru a doufám, že se učitel zasměje.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Jaký předmět na gymplu tě baví nejvíc?",
+                options: [
+                    { text: "Informatika a fyzika.", cat: "technicky" },
+                    { text: "Výtvarná výchova a hudebka.", cat: "umelecky" },
+                    { text: "Dějepis, literatura a cizí jazyky.", cat: "humanitni" },
+                    { text: "Tělesná výchova.", cat: "sportovni" },
+                    { text: "Základy společenských věd a mediální výchova.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Co máš nejraději v bufetu?",
+                options: [
+                    { text: "Energetický nápoj pro noční kódování.", cat: "technicky" },
+                    { text: "Kávu v estetickém kelímku pro inspiraci.", cat: "umelecky" },
+                    { text: "Čaj a tlustou knihu, kterou čtu u svačiny.", cat: "humanitni" },
+                    { text: "Proteinovou tyčinku a 3 litry ionťáku.", cat: "sportovni" },
+                    { text: "Cokoliv, co se dobře vyjímá na fotce pro stories.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Jak řešíš neshody ve studentské radě?",
+                options: [
+                    { text: "Navrhnu efektivní digitální hlasovací systém a tabulku v Excelu.", cat: "technicky" },
+                    { text: "Přinesu vizuální návrh nového konceptu, který všechny okouzlí.", cat: "umelecky" },
+                    { text: "Přednesím sáhodlouhou řeč plnou argumentů a citací.", cat: "humanitni" },
+                    { text: "Navrhnu to vyřešit férovým sportovním zápasem na hřišti.", cat: "sportovni" },
+                    { text: "Uspořádám anketu pro sledující a nechám rozhodnout veřejnost.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Jak vypadá tvůj pokoj o zkušebním období?",
+                options: [
+                    { text: "Pájecí stanice, rozdělaný arduino projekt a 5 monitorů.", cat: "technicky" },
+                    { text: "Rozházené skicáky, tuby s barvami a všude plno nápadů.", cat: "umelecky" },
+                    { text: "Komínky encyklopedií a bichlí od podlahy až ke stropu.", cat: "humanitni" },
+                    { text: "Činky, tenisky a medaile pověšené na každém háčku.", cat: "sportovni" },
+                    { text: "Ring light, stativ, mikrofon a nabitý telefon na nabíječce.", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Jakou přezdívku by ti dali spolužáci?",
+                options: [
+                    { text: "Pan Vynálezce / Hacker", cat: "technicky" },
+                    { text: "Kreativní duše", cat: "umelecky" },
+                    { text: "Chodící Wikipedie", cat: "humanitni" },
+                    { text: "Školní olympionik", cat: "sportovni" },
+                    { text: "Školní influencer", cat: "medialni" }
+                ]
+            },
+            {
+                question: "Co je tvůj hlavní cíl po maturitě?",
+                options: [
+                    { text: "Sestrojit vlastní robotickou ruku nebo vyvinout aplikaci.", cat: "technicky" },
+                    { text: "Uspořádat vlastní vernisáž nebo tvořit design v Praze či Paříži.", cat: "umelecky" },
+                    { text: "Napsat knihu, stát se diplomatem nebo profesorem.", cat: "humanitni" },
+                    { text: "Vyhrát ligu, pokořit rekord nebo jet na olympiádu.", cat: "sportovni" },
+                    { text: "Získat 100k sledujících a vybudovat silnou osobní značku.", cat: "medialni" }
+                ]
+            }
+        ];
+
+        const profiles = {
+            technicky: {
+                title: "Pan Vynálezce / Mistr Kutilů",
+                emoji: "🔧",
+                desc: "Jsi technický typ! Bez problémů opravíš cokoliv od počítače po kávovar, programuješ s přehledem a tvoje myšlení funguje jako přesný švýcarský stroj. Budoucnost tě čeká v inženýrství, IT nebo vývoji technologií."
+            },
+            umelecky: {
+                title: "Kreativní mysl",
+                emoji: "🎨",
+                desc: "Jsi umělecká duše! Vidíš svět v jiných barvách, tvoje seberealizace probíhá přes design, hudbu, psaní nebo vizuální tvorbu. Tvoje nápady mají obrovský šmrnc a originalitu."
+            },
+            humanitni: {
+                title: "Chodící Wikipedie",
+                emoji: "📚",
+                desc: "Jsi humanitní expert! Znáš souvislosti, miluješ literaturu, historii, jazyky a hluboké diskuze. Tvoje slovní zásoba a přehled berou všem dech."
+            },
+            sportovni: {
+                title: "Školní olympionik",
+                emoji: "⚡",
+                desc: "Jsi sportovní dravec! Energie máš na rozdávání, pohyb je tvůj přirozený element a disciplína tě provází každým dnem. Cesta na bednu je pro tebe jasná volba."
+            },
+            medialni: {
+                title: "Školní hvězda / Influencer",
+                emoji: "📱",
+                desc: "Jsi mediální hvězda! Máš přehled o trendech, víš, jak oslovit lidi, bavit publikum a ovládat sociální sítě s naprostou lehkostí."
+            }
+        };
+
+        let currentQuestion = 0;
+        let scores = { technicky: 0, umelecky: 0, humanitni: 0, sportovni: 0, medialni: 0 };
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const progressBar = document.getElementById('progress-bar');
+        const stepCounter = document.getElementById('step-counter');
+
+        function startQuiz() {
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            questionText.textContent = q.question;
+            stepCounter.textContent = `Otázka ${currentQuestion + 1} / ${questions.length}`;
+            progressBar.style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/50 text-slate-200 hover:text-white font-medium transition-all duration-200 cursor-pointer flex items-center space-x-3 group";
+                btn.innerHTML = `<span class="w-7 h-7 rounded-xl bg-slate-700 group-hover:bg-indigo-600 flex items-center justify-center text-xs font-bold text-slate-300 group-hover:text-white transition-colors">${String.fromCharCode(65 + index)}</span><span class="flex-1">${opt.text}</span>`;
+                btn.onclick = () => selectOption(opt.cat);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(category) {
+            scores[category]++;
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            stepCounter.parentElement.classList.add('hidden');
+
+            let topCat = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            const profile = profiles[topCat];
+
+            document.getElementById('result-emoji').textContent = profile.emoji;
+            document.getElementById('result-title').textContent = profile.title;
+            document.getElementById('result-desc').textContent = profile.desc;
+
+            const total = questions.length;
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = '';
+
+            const catNames = {
+                technicky: "Technický obor",
+                umelecky: "Umělecký obor",
+                humanitni: "Humanitní obor",
+                sportovni: "Sportovní obor",
+                medialni: "Mediální obor"
+            };
+
+            const colors = {
+                technicky: "from-blue-500 to-cyan-500",
+                umelecky: "from-purple-500 to-pink-500",
+                humanitni: "from-amber-500 to-orange-500",
+                sportovni: "from-emerald-500 to-teal-500",
+                medialni: "from-rose-500 to-red-500"
+            };
+
+            for (const [cat, score] of Object.entries(scores)) {
+                const percent = Math.round((score / total) * 100);
+                const div = document.createElement('div');
+                div.className = "space-y-1.5";
+                div.innerHTML = `
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span class="text-slate-300">${catNames[cat]}</span>
+                        <span class="text-slate-400">${percent}%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r ${colors[cat]} h-full rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                statsContainer.appendChild(div);
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            scores = { technicky: 0, umelecky: 0, humanitni: 0, sportovni: 0, medialni: 0 };
+            resultScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            stepCounter.parentElement.classList.remove('hidden');
+        }
+
+        function copyResult() {
+            let topCat = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            const profile = profiles[topCat];
+            const text = `Můj výsledek z Gympl Simulátoru: ${profile.title} ${profile.emoji} Zjisti co budeš ty!`;
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.remove('opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('opacity-0');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
